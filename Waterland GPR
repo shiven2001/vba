@@ -1,0 +1,204 @@
+Dim wbmain As Workbook
+
+Function GetFolder() As String
+    Dim fldr As FileDialog
+    Dim sItem As String
+    Set fldr = Application.FileDialog(msoFileDialogFolderPicker)
+    With fldr
+        .Title = "Select a Folder"
+        .AllowMultiSelect = False
+        .InitialFileName = Application.DefaultFilePath
+        If .Show <> -1 Then GoTo NextCode
+        sItem = .SelectedItems(1)
+    End With
+
+NextCode:
+    GetFolder = sItem
+    Set fldr = Nothing
+End Function
+
+Private Sub CommandButton8_Click()
+
+Dim wsDest As Worksheet
+Dim myCRange As Range
+Dim cCell As Range
+Dim cindex As Integer
+
+Application.DisplayAlerts = False
+Application.ScreenUpdating = False
+Application.Calculation = xlCalculationManual
+Application.EnableEvents = False
+
+Set wsDest = wbmain.Worksheets("1")
+Set checkCRange = wbmain.Worksheets(1).Range("A:A")
+For Each cCell In checkCRange
+        If IsEmpty(cCell.Value) Or cCell.Value = " " Then
+            cindex = cCell.Row
+            Exit For
+        End If
+    Next cCell
+    
+    wbmain.Worksheets("CG").Range("A1:I" & wbmain.Worksheets("CG").Range("F" & Rows.Count).End(xlUp).Row).AutoFilter Field:=2, Criteria1:="R*", Operator:= _
+    xlFilterValues
+
+    wbmain.Worksheets("CG").Range("B2:D" & wbmain.Worksheets("CG").Range("B" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Copy
+    wsDest.Range("A1").PasteSpecial paste:=xlPasteValues
+
+' extend_lx Macro
+
+    Dim checkRange As Range
+    Dim myCell As Range
+    Dim index As Integer
+    
+    Set checkRange = wbmain.Worksheets("1").Range("A:A")
+    For Each myCell In checkRange
+            If IsEmpty(myCell.Value) Or myCell.Value = " " Then
+                index = myCell.Row
+                Exit For
+            End If
+        Next myCell
+
+    'wbmain.Worksheets("1").Range("D1:D2").AutoFill Destination:=wbmain.Worksheets("1").Range("D1:A" & index - 1), Type:=xlFillDefault
+    'wbmain.Worksheets("1").Range("E1:E2").AutoFill Destination:=wbmain.Worksheets("1").Range("E1:B" & index - 1), Type:=xlFillDefault
+    'wbmain.Worksheets("1").Range("F1:F2").AutoFill Destination:=wbmain.Worksheets("1").Range("F1:C" & index - 1), Type:=xlFillDefault
+    
+Application.DisplayAlerts = True
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+Application.EnableEvents = True
+MsgBox "Data Imported Successfully", vbInformation
+
+End Sub
+
+Private Sub generateScripts_Click()
+Application.DisplayAlerts = False
+Application.ScreenUpdating = False
+Application.Calculation = xlCalculationManual
+Application.EnableEvents = False
+Dim FolderName As String
+
+' Pop up the folder-selection box to get the folder form the user:
+    FolderName = GetFolder()
+    If FolderName = "" Then
+        MsgBox "No folder was selected."
+        Exit Sub
+    End If
+
+'block
+
+    Dim fName As String
+    Dim sh As Worksheet, nFileNum As Integer
+    Dim paste As String
+    Dim myFolder As String
+    
+    wbmain.Worksheets("gprblock").Activate
+    Set sh = wbmain.Worksheets("gprblock")
+        
+    On Error Resume Next
+    
+    sh.Range("A1:G" & sh.Range("G" & Rows.Count).End(xlUp).Row).AutoFilter Field:=7, Criteria1:=Array( _
+    "R"), Operator:= _
+    xlFilterValues
+    
+    sh.Range("A1:F" & sh.Range("A" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    Dim r As Range, c As Range
+    Dim sTemp As String
+
+    Open FolderName & "\" & "gprblock.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+'dText
+    
+    wbmain.Worksheets("gprdText").Activate
+    Set sh = wbmain.Worksheets("gprdText")
+    
+    sh.Range("A1:H" & sh.Range("H" & Rows.Count).End(xlUp).Row).AutoFilter Field:=8, Criteria1:=Array( _
+    "R"), Operator:= _
+    xlFilterValues
+    
+    sh.Range("A1:G" & sh.Range("A" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    Open FolderName & "\" & "gprdText.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+'pline
+
+    wbmain.Worksheets("gprpline").Activate
+    Set sh = wbmain.Worksheets("gprpline")
+    
+    sh.Range("A1:E" & sh.Range("E" & Rows.Count).End(xlUp).Row).AutoFilter Field:=5, Criteria1:=Array( _
+    "R"), Operator:= _
+    xlFilterValues
+
+    sh.Range("A1:D" & sh.Range("A" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    Open FolderName & "\" & "gprpline.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+'FlowD
+    
+    wbmain.Worksheets("gprFlowD").Activate
+    Set sh = wbmain.Worksheets("gprFlowD")
+    
+    sh.Range("A1:G" & sh.Range("G" & Rows.Count).End(xlUp).Row).AutoFilter Field:=7, Criteria1:=Array("F", "S", "Z"), Operator:=xlFilterValues
+    
+    sh.Range("A1:F" & sh.Range("F" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    Open FolderName & "\" & "gprFlowD.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    Open FolderName & "\" & "full_gpr_script.scr" For Output As #1
+    Print #1, bigtemp
+    Close #1
+    
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    Application.EnableEvents = True
+    MsgBox "Scripts Saved!", vbInformation
+
+End Sub
+
+Private Sub UserForm_Activate()
+
+Set wbmain = ThisWorkbook
+
+End Sub
+
