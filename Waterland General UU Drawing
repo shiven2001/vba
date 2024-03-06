@@ -1,0 +1,1301 @@
+Dim wb As Workbook
+Dim wbmain As Workbook
+Dim wbUU As Workbook
+Dim c As Integer
+Dim UUc As Integer
+Dim textData As String
+Dim wbcon As Workbook
+Dim cCon As Integer
+
+Public Function IsInArray(stringToBeFound As String, arr As Variant) As Boolean
+    Dim i
+    For i = LBound(arr) To UBound(arr)
+        If arr(i) = stringToBeFound Then
+            IsInArray = True
+            Exit Function
+        End If
+    Next i
+    IsInArray = False
+
+End Function
+
+Function GetFolder() As String
+    Dim fldr As FileDialog
+    Dim sItem As String
+    Set fldr = Application.FileDialog(msoFileDialogFolderPicker)
+    With fldr
+        .Title = "Select a Folder"
+        .AllowMultiSelect = False
+        .InitialFileName = Application.DefaultFilePath
+        If .Show <> -1 Then GoTo NextCode
+        sItem = .SelectedItems(1)
+    End With
+
+NextCode:
+    GetFolder = sItem
+    Set fldr = Nothing
+End Function
+
+
+Private Sub checkErrors_Click()
+
+Dim checkxRange As Range
+Dim xCell As Range
+Dim checkendRange As Range
+Dim endCell As Range
+Dim xindex As Integer
+Dim endindex As Integer
+Dim errorValue As String
+Dim wsDest As Worksheet
+Dim lDestLastRow As Long
+Dim i As Long
+Dim col1 As Long
+Dim col2 As Long
+Dim col3 As Long
+
+Application.DisplayAlerts = False
+Application.ScreenUpdating = False
+Application.Calculation = xlCalculationManual
+Application.EnableEvents = False
+
+'CG errors
+Set wsDest = ThisWorkbook.Worksheets("AutoImport")
+Set checkendRange = wbmain.Worksheets("x").Range("A:A")
+For Each endCell In checkendRange
+    If endCell.Value = "" Then
+    endindex = endCell.Row
+    Exit For
+    End If
+Next endCell
+
+i = 0
+
+
+Set checkxRange = wbmain.Worksheets("x").Range("F1:F" & endindex - 1)
+For Each xCell In checkxRange
+        If WorksheetFunction.IsNA(xCell) Then
+            xindex = xCell.Row
+            errorValue = wbmain.Worksheets("x").Range("A" & xindex).Value
+            lDestLastRow = wbmain.Worksheets("CG").Cells(wbmain.Worksheets("CG").Rows.Count, "C").End(xlUp).Offset(1).Row
+            col1 = wbmain.Worksheets("CG").Range("C" & lDestLastRow - 1) - 350
+            col2 = wbmain.Worksheets("CG").Range("D" & lDestLastRow - 1) - 350
+            col3 = wbmain.Worksheets("CG").Range("E" & lDestLastRow - 1) + 2
+            wbmain.Worksheets("CG").Range("B" & lDestLastRow) = errorValue
+            wbmain.Worksheets("CG").Range("C" & lDestLastRow) = i + col1
+            wbmain.Worksheets("CG").Range("D" & lDestLastRow) = i + col2
+            wbmain.Worksheets("CG").Range("E" & lDestLastRow) = i + col3
+            i = i + 2
+            wbmain.Worksheets("CG").Range("B" & lDestLastRow).Interior.ColorIndex = 6
+            wbmain.Worksheets("CG").Range("C" & lDestLastRow).Interior.ColorIndex = 6
+            wbmain.Worksheets("CG").Range("D" & lDestLastRow).Interior.ColorIndex = 6
+            wbmain.Worksheets("CG").Range("E" & lDestLastRow).Interior.ColorIndex = 6
+            
+            lDestLastRow = wsDest.Cells(wsDest.Rows.Count, "E").End(xlUp).Offset(1).Row
+            If wsDest.Range("E4") = "" Then
+                wsDest.Range("E4") = errorValue & " is missing coordinates."
+                Else: wsDest.Range("E" & lDestLastRow) = errorValue & " is missing coordinates."
+            End If
+        End If
+    Next xCell
+    
+
+
+'TC errors
+
+Dim lastRowE As Integer
+Dim lastRowF As Integer
+Dim foundTrue As Boolean
+
+lastRowE = wbmain.Worksheets("CG").Cells(wbmain.Worksheets("CG").Rows.Count, "B").End(xlUp).Row
+lastRowF = wbmain.Worksheets("TC").Cells(wbmain.Worksheets("TC").Rows.Count, "B").End(xlUp).Row
+
+For i = 1 To lastRowE
+foundTrue = False
+For j = 1 To lastRowF
+
+    If wbmain.Worksheets("CG").Cells(i, 9).Value = wbmain.Worksheets("TC").Cells(j, 2).Value Then
+        foundTrue = True
+        Exit For
+    End If
+
+Next j
+
+If Not foundTrue Then
+    If InStr(wbmain.Worksheets("CG").Cells(i, 9), "J") = 0 And InStr(wbmain.Worksheets("CG").Cells(i, 9), "R") = 0 And InStr(wbmain.Worksheets("CG").Cells(i, 9), "SB") = 0 Then
+    If InStr(wbmain.Worksheets("CG").Cells(i, 9), "CW") = 0 And InStr(wbmain.Worksheets("CG").Cells(i, 9), "I") = 0 And InStr(wbmain.Worksheets("CG").Cells(i, 9), "HDN") = 0 Then
+        'MsgBox ("didnt find string: " & Sheets("E Dump").Cells(i, 2).value)
+        errorValue = wbmain.Worksheets("CG").Cells(i, 9).Value
+        'Astro DONT WANT
+        'lDestLastRow = wbmain.Worksheets("TC").Cells(wbmain.Worksheets("TC").Rows.Count, "B").End(xlUp).Offset(1).Row
+        'wbmain.Worksheets("TC").Range("B" & lDestLastRow).Value = errorValue
+        'wbmain.Worksheets("TC").Range("C" & lDestLastRow).Value = "U"
+        'wbmain.Worksheets("TC").Range("B" & lDestLastRow).Interior.ColorIndex = 6
+        'wbmain.Worksheets("TC").Range("C" & lDestLastRow).Interior.ColorIndex = 6
+        
+        
+        lDestLastRow = wsDest.Cells(wsDest.Rows.Count, "F").End(xlUp).Offset(1).Row
+        If wsDest.Range("F4") = "" Then
+                    wsDest.Range("F4") = errorValue & " is missing from TC."
+                    Else: wsDest.Range("F" & lDestLastRow) = errorValue & " is missing from TC."
+        End If
+    End If
+    End If
+End If
+
+
+Next i
+
+
+'connections missing
+
+Set checkendRange = wbmain.Worksheets("x").Range("A:A")
+For Each endCell In checkendRange
+    If endCell.Value = "" Then
+    endindex = endCell.Row
+    Exit For
+    End If
+Next endCell
+
+i = 0
+
+Set checkxRange = wbmain.Worksheets("x").Range("O1:O" & endindex - 1)
+For Each xCell In checkxRange
+        If WorksheetFunction.IsNA(xCell) Or xCell.Text = "0" Then
+            xindex = xCell.Row
+            errorValue = wbmain.Worksheets("x").Range("A" & xindex).Value
+            lDestLastRow = wsDest.Cells(wsDest.Rows.Count, "G").End(xlUp).Offset(1).Row
+            If wsDest.Range("G4") = "" Then
+                wsDest.Range("G4") = errorValue & " is missing connection."
+                Else: wsDest.Range("G" & lDestLastRow) = errorValue & " is missing connection."
+            End If
+        End If
+    Next xCell
+
+Application.DisplayAlerts = True
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+Application.EnableEvents = True
+MsgBox "Complete", vbInformation
+
+End Sub
+
+Private Sub CommandButton1_Click()
+Application.Visible = True
+Dim FileLocation As String
+FileLocation = Application.GetOpenFilename()
+Dim check As String
+check = Dir(FileLocation)
+If check <> "" Then
+Set wb = Workbooks.Open(FileLocation)
+wb.Windows(1).Visible = False
+c = wb.Sheets.Count
+
+' fix_undefined problem and add xx# on missing values
+
+i = 1
+For W = 1 To c Step 1
+
+  For x = 1 To 15 Step 2
+    Set checkRange = wb.Worksheets(W).Range(Chr(64 + x) & "12:" & Chr(64 + x) & "36")
+    Set myRange = wb.Worksheets(W).Range(Chr(64 + x + 1) & "12:" & Chr(64 + x + 1) & "36")
+    counter = 0
+    For Each mycheckCell In checkRange
+        If Not IsEmpty(mycheckCell.Value) Then
+        counter = counter + 1
+        myRange.Cells(counter).Replace What:="undefined", Replacement:="", MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+        myRange.Cells(counter).Replace What:=" ", Replacement:="", MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+        myRange.Cells(counter).Replace What:="Other", Replacement:="", MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+        If IsEmpty(myRange.Cells(counter).Value) Then
+            myRange.Cells(counter).Value = "x" & i
+            i = i + 1
+        End If
+        End If
+    Next mycheckCell
+  Next x
+Next W
+
+Me.Label1 = wb.Name
+CommandButton3.Enabled = True
+End If
+
+End Sub
+
+Private Sub CommandButton10_Click()
+
+'Sorting
+
+With wbmain.Worksheets("CG").Sort
+     .SortFields.Add Key:=Range("A1"), Order:=xlAscending
+     .SetRange Range("A1:I" & wbmain.Worksheets("CG").Range("A" & Rows.Count).End(xlUp).Row)
+     .Header = xlNo
+     .Apply
+End With
+
+CommandButton1.Enabled = True
+
+End Sub
+
+Private Sub CommandButton11_Click()
+
+
+
+End Sub
+
+Private Sub CommandButton2_Click()
+
+Dim check As String
+
+Dim TopoFileLocation As String
+TopoFileLocation = Application.GetOpenFilename()
+check = Dir(TopoFileLocation)
+If check <> "" Then
+    Set wbmain = Workbooks.Open(TopoFileLocation)
+    MsgBox "Selected Topo File Successfully", vbInformation
+    Me.Label2 = wbmain.Name
+    Windows(wbmain.Name).Visible = True
+End If
+
+End Sub
+
+Private Sub CommandButton3_Click()
+
+'Copy survey data
+Dim wsCopy As Worksheet
+Dim wsDest As Worksheet
+Dim lCopyLastRow As Long
+Dim lDestLastRow As Long
+Dim Count As Integer
+Dim myRange As Range
+Dim myCell As Range
+Dim i As Integer
+
+
+Application.DisplayAlerts = False
+Application.ScreenUpdating = False
+Application.Calculation = xlCalculationManual
+Application.EnableEvents = False
+
+Set wsDest = wbmain.Worksheets("CG")
+
+For W = 1 To c Step 1
+
+  'Set variables for copy and destination sheets
+  Set wsCopy = wb.Worksheets(W)
+  
+  For x = 2 To 16 Step 2
+  '1. Find last used row in the copy range based on data in column B
+  'lCopyLastRow = wsCopy.Cells(wsCopy.Rows.Count, "B").End(xlUp).Row
+    
+  '2. Find first blank row in the destination range based on data in column B
+  'Offset property moves down 1 row
+  lDestLastRow = wsDest.Cells(wsDest.Rows.Count, "B").End(xlUp).Offset(1).Row
+
+  '3. Copy & Paste Data
+  
+  wsCopy.Range(Chr(64 + x) & "12:" & Chr(64 + x) & "36").Copy
+    If wsDest.Range("B1") = "" Then
+        wsDest.Range("B1").PasteSpecial paste:=xlPasteValues
+    Else: wsDest.Range("B" & lDestLastRow).PasteSpecial paste:=xlPasteValues
+    End If
+    
+    'wsCopy.Range("B12:B36", "D12:D36", "F12:F36", "H12:H36", "J12:J36", "L12:L36", "N12:N36", "P12:P36").Copy
+    
+  Next x
+  
+Next W
+
+'fix G and J values
+Dim checkSRange As Range
+Dim sCell As Range
+Dim str As String
+Dim sindex As Integer
+Set checkSRange = wbmain.Worksheets("CG").Range("B:B")
+For Each sCell In checkSRange
+        'If InStr(sCell.Value, "G") > 2 Then
+         If Right(sCell.Value, 1) = "G" Or Right(sCell.Value, 1) = "g" Then
+            sCell.Value = Left(sCell.Value, Len(sCell.Value) - 1)
+            str = sCell.Value
+         End If
+         
+         If InStr(sCell.Value, "J") > 0 Or InStr(sCell.Value, "j") > 0 Then
+            If Left(sCell.Value, 1) = "J" Or Left(sCell.Value, 1) = "j" Then
+            sCell.Value = str & sCell.Value
+            sCell.Interior.ColorIndex = 19
+            ElseIf sCell.Interior.ColorIndex <> 19 Then
+            sCell.Value = Right(sCell.Value, Len(sCell.Value) - 1)
+            sCell.Value = str & sCell.Value
+            sCell.Interior.ColorIndex = 19
+            End If
+        End If
+    Next sCell
+
+ListBox2.AddItem Me.Label1
+
+Application.DisplayAlerts = True
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+Application.EnableEvents = True
+CommandButton3.Enabled = False
+wb.Windows(1).Visible = True
+wb.Save
+wb.Close
+
+MsgBox "Data Imported Successfully", vbInformation
+Set wb = Nothing
+Me.Label1 = "no file selected..."
+
+
+End Sub
+
+Private Sub CommandButton4_Click()
+
+Dim UUFileLocation As String
+Dim check As String
+UUFileLocation = Application.GetOpenFilename()
+check = Dir(UUFileLocation)
+If check <> "" Then
+Set wbUU = Workbooks.Open(UUFileLocation)
+wbUU.Windows(1).Visible = False
+UUc = wbUU.Sheets.Count
+MsgBox "Selected UU File Successfully", vbInformation
+Me.Label3 = wbUU.Name
+CommandButton5.Enabled = True
+End If
+
+End Sub
+
+Private Sub CommandButton5_Click()
+
+
+'Copy UU data
+Dim wsCopy As Worksheet
+Dim wsDest As Worksheet
+Dim lCopyLastRow As Long
+Dim lDestLastRow As Long
+Dim Count As Integer
+Dim myRange As Range
+Dim myCell As Range
+Dim i As Integer
+Dim MainIndex As Long
+Dim cl As Range
+
+Application.DisplayAlerts = False
+Application.ScreenUpdating = False
+Application.Calculation = xlCalculationManual
+Application.EnableEvents = False
+
+Set wsDest = wbmain.Worksheets("TC")
+lDestLastRow = wsDest.Cells(wsDest.Rows.Count, "A").End(xlUp).Offset(1).Row
+MainIndex = lDestLastRow
+
+For W = 1 To UUc Step 1
+
+  'Set variables for copy and destination sheets
+  Set wsCopy = wbUU.Worksheets(W)
+    
+  '2. Find first blank row in the destination range based on data in column B
+  'Offset property moves down 1 row
+  lDestLastRow = wsDest.Cells(wsDest.Rows.Count, "A").End(xlUp).Offset(1).Row
+
+  '3. Copy & Paste Data
+  wsCopy.Range("B11:F40").Copy
+    If wsDest.Range("A1") = "" Then
+        wsDest.Range("A1").PasteSpecial paste:=xlPasteValues
+    Else: wsDest.Range("A" & lDestLastRow).PasteSpecial paste:=xlPasteValues
+    End If
+  wsCopy.Range("K11:K40").Copy
+    If wsDest.Range("F1") = "" Then
+        wsDest.Range("F1").PasteSpecial paste:=xlPasteValues
+    Else: wsDest.Range("F" & lDestLastRow).PasteSpecial paste:=xlPasteValues
+    End If
+  
+Next W
+
+
+' fix symbols
+
+Dim checkSRange As Range
+Dim abcd As Integer
+Dim fixRange As Range
+Dim sCell As Range
+Dim bCell As Range
+Dim sindex As Integer
+lDestLastRow = wsDest.Cells(wsDest.Rows.Count, "A").End(xlUp).Offset(1).Row
+        
+    Dim dic As Object: Set dic = CreateObject("Scripting.Dictionary")
+    dic.comparemode = vbTextCompare
+    
+    Dim dKey
+    For Each dKey In Split("V FH WM N LM S Y CP IN OUT END G H")
+        dic.Add dKey, Nothing
+    Next dKey
+    
+    Set checkSRange = wsDest.Range("E" & MainIndex & ":E" & lDestLastRow - 1)
+    
+    For Each cl In checkSRange 'checkSRange
+        If Not dic.exists(Trim(cl)) Then
+            cl.Value = ""
+        End If
+    Next cl
+
+    Set checkSRange = wsDest.Range("B" & MainIndex & ":B" & lDestLastRow - 1)
+    For Each bCell In checkSRange
+         If bCell.Value = "" Then
+            bCell.Value = "U"
+         ElseIf IsNumeric(bCell.Value) Then
+            bCell = CDec(bCell)
+         End If
+         If bCell.Value = "0" Then
+            bCell.Value = "E"
+         End If
+    Next bCell
+
+
+'fix user input accidents in symbols
+i = 0
+lDestLastRow = wsDest.Cells(wsDest.Rows.Count, "A").End(xlUp).Offset(1).Row
+Set dic = CreateObject("Scripting.Dictionary")
+    dic.comparemode = vbTextCompare
+    For Each dKey In Split("AV BV GV AFH BFH AWM BWM GN ALM PLM LLM MLM CLM HLM KLM TLM WLM ELM NLM PS LS MS CS HS KS WS TS ES NS SY SCP SIN SOUT END AG BG GG PG LG MH CG DG HG KG TG WG EG XG NG UG FG SG")
+        dic.Add dKey, Nothing
+    Next dKey
+
+For i = 2 To lDestLastRow - 1
+    If Not dic.exists(Trim(Left$(wsDest.Cells(i, 1), 1) & wsDest.Cells(i, 5))) Then
+    wsDest.Cells(i, 5).Value = ""
+    End If
+Next i
+
+Application.DisplayAlerts = True
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+Application.EnableEvents = True
+
+MsgBox "Data Imported Successfully", vbInformation
+wbUU.Windows(1).Visible = True
+wbUU.Close SaveChanges:=True
+ListBox3.AddItem Me.Label3
+Set wbUU = Nothing
+Me.Label3 = "no file selected..."
+
+CommandButton5.Enabled = False
+
+End Sub
+
+Private Sub CommandButton6_Click()
+Dim textFileNum As Integer
+Dim textFileLocation, textDelimiter As String
+Dim tArray() As String
+Dim sArray() As String
+Dim textFileName As String
+Dim check As String
+textFileLocation = Application.GetOpenFilename()
+If textFileLocation <> "False" Then
+textFileName = Dir(textFileLocation)
+textFileNum = FreeFile
+Open textFileLocation For Input As textFileNum
+textData = Input(LOF(textFileNum), textFileNum)
+Close textFileNum
+Me.Label5 = textFileName
+CommandButton7.Enabled = True
+End If
+End Sub
+
+Private Sub CommandButton7_Click()
+
+Application.Calculation = xlCalculationManual
+Application.EnableEvents = False
+
+Dim rowNum, colNum As Integer
+Dim textDelimiter As String
+Dim tArray() As String
+Dim sArray() As String
+Dim lDestLastRow As Long
+Dim inte As Integer
+inte = 0
+Application.ScreenUpdating = False
+
+textDelimiter = ","
+tArray() = Split(textData, vbLf)
+For rowNum = LBound(tArray) To UBound(tArray) - 2
+If Len(Trim(tArray(rowNum))) <> 0 Then
+sArray = Split(tArray(rowNum), textDelimiter)
+wbmain.Worksheets("CG").[A1] = sArray(1)
+
+' if fist cell is empty and first check if same cells
+
+'If inte = 0 Then
+'On Error GoTo ErrorHandler
+
+If wbmain.Worksheets("CG").Cells(1, 3) = "" Then
+        wbmain.Worksheets("CG").Cells(rowNum + 1, 1) = sArray(0)
+        For colNum = LBound(sArray) + 1 To UBound(sArray)
+        wbmain.Worksheets("CG").Cells(rowNum + 1, colNum + 2) = sArray(colNum)
+        Next colNum
+ElseIf Round(wbmain.Worksheets("CG").Cells(1, 3), 3) = Round(sArray(1), 3) Then
+MsgBox "Similar Data Found", vbInformation
+GoTo Labelx
+
+Else:
+        lDestLastRow = wbmain.Worksheets("CG").Cells(wbmain.Worksheets("CG").Cells.Rows.Count, "A").End(xlUp).Row
+        wbmain.Worksheets("CG").Cells(lDestLastRow + 1, 1) = sArray(0)
+        For colNum = LBound(sArray) + 1 To UBound(sArray)
+        wbmain.Worksheets("CG").Cells(lDestLastRow + 1, colNum + 2) = sArray(colNum)
+        Next colNum
+End If
+
+End If
+
+Next rowNum
+
+If inte = 1 Then
+Labelx:
+    For rowNum = LBound(tArray) To UBound(tArray) - 2
+    sArray = Split(tArray(rowNum), textDelimiter)
+    wbmain.Worksheets("CG").Cells(rowNum + 1, 1) = sArray(0)
+    For colNum = LBound(sArray) + 1 To UBound(sArray)
+    wbmain.Worksheets("CG").Cells(rowNum + 1, colNum + 2) = sArray(colNum)
+    Next colNum
+    Next rowNum
+End If
+
+' extend_cg1 Macro and delete extra rows
+
+'If wbmain.Worksheets("CG").Cells(lDestLastRow + 1, 1) <> "" Then
+'    wbmain.Worksheets("CG").Cells(lDestLastRow + 1, 1) = ""
+'End If
+
+
+
+Dim checkRange As Range
+Dim myCell As Range
+Dim index As Integer
+
+Set checkRange = wbmain.Worksheets("CG").Range("C:C")
+For Each myCell In checkRange
+        If IsEmpty(myCell.Value) Or myCell.Value = " " Then
+            index = myCell.Row
+            Exit For
+        End If
+    Next myCell
+
+wbmain.Worksheets("CG").Range("F1:F" & index - 1).Value = "text"
+wbmain.Worksheets("CG").Range("B" & index & ":B" & index + 200).Value = ""
+wbmain.Worksheets("CG").Range("H1:H2").AutoFill Destination:=wbmain.Worksheets("CG").Range("H1:H" & index - 1), Type:=xlFillCopy
+wbmain.Worksheets("CG").Range("G1:G2").AutoFill Destination:=wbmain.Worksheets("CG").Range("G1:G" & index - 1), Type:=xlFillDefault
+wbmain.Worksheets("CG").Range("I1:I2").AutoFill Destination:=wbmain.Worksheets("CG").Range("I1:I" & index - 1), Type:=xlFillDefault
+
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+Application.EnableEvents = True
+CommandButton7.Enabled = False
+ListBox1.AddItem Me.Label5
+Me.Label5 = "no file selected..."
+textData = ""
+MsgBox "Data Imported Successfully", vbInformation
+
+
+
+End Sub
+
+
+Private Sub CommandButton9_Click()
+Dim ConFileLocation As String
+ConFileLocation = Application.GetOpenFilename()
+Dim check As String
+check = Dir(ConFileLocation)
+If check <> "" Then
+Set wbcon = Workbooks.Open(ConFileLocation)
+wbcon.Windows(1).Visible = False
+cCon = wbcon.Sheets.Count
+MsgBox "Selected Conntectivity File Successfully", vbInformation
+Me.Label7 = wbcon.Name
+CommandButton8.Enabled = True
+End If
+
+End Sub
+
+Private Sub CommandButton8_Click()
+
+Dim wsDest As Worksheet
+Dim myCRange As Range
+Dim cCell As Range
+Dim cindex As Integer
+
+Application.ScreenUpdating = False
+
+Set wsDest = wbmain.Worksheets("LX-Input Sort")
+Set checkCRange = wbcon.Worksheets(1).Range("A:A")
+For Each cCell In checkCRange
+        If IsEmpty(cCell.Value) Or cCell.Value = " " Then
+            cindex = cCell.Row
+            Exit For
+        End If
+    Next cCell
+wbcon.Worksheets(1).Range("A1:T" & cindex).Copy
+wsDest.Range("E1").PasteSpecial paste:=xlPasteValues
+
+Dim checkRange As Range
+Dim myCell As Range
+Dim index As Integer
+
+Set checkRange = wbmain.Worksheets("LX-Input Sort").Range("E:E")
+For Each myCell In checkRange
+        If IsEmpty(myCell.Value) Or myCell.Value = " " Then
+            index = myCell.Row
+            Exit For
+        End If
+    Next myCell
+    
+
+'Sorting
+Dim checkSRange As Range
+Dim sCell As Range
+Dim sindex As Integer
+Dim introws As Range
+Dim lRow As Long, m As Long
+sindex = -1
+
+Set checkSRange = wbmain.Worksheets("LX-Input Sort").Range("E:E")
+For Each sCell In checkSRange
+        If InStr(sCell.Value, "A") > 0 Then
+            sindex = sCell.Row
+            Exit For
+        End If
+    Next sCell
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "B") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "G") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "P") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "L") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "M") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "C") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "H") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "K") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "T") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "W") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "E") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "N") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "S") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "D") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "X") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "U") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+If sindex = -1 Then
+    For Each sCell In checkSRange
+            If InStr(sCell.Value, "F") > 0 Then
+                sindex = sCell.Row
+                Exit For
+            End If
+        Next sCell
+End If
+
+wbmain.Worksheets("LX-Input Sort").Range("E1:X1").Copy
+wbmain.Worksheets("LX-Input Sort").Range("Z1:AS1").PasteSpecial paste:=xlPasteValues
+wbmain.Worksheets("LX-Input Sort").Range("E" & sindex & ":X" & sindex).Copy
+wbmain.Worksheets("LX-Input Sort").Range("E1:X1").PasteSpecial paste:=xlPasteValues
+wbmain.Worksheets("LX-Input Sort").Range("Z1:AS1").Copy
+wbmain.Worksheets("LX-Input Sort").Range("E" & sindex & ":X" & sindex).PasteSpecial paste:=xlPasteValues
+wbmain.Worksheets("LX-Input Sort").Range("Z1:AS1").ClearContents
+
+With wbmain.Worksheets("LX-Input Sort").Sort
+     .SortFields.Add Key:=Range("A1"), Order:=xlAscending
+     .SetRange Range("A1:X" & index - 1)
+     .Header = xlNo
+     .Apply
+End With
+
+wbmain.Worksheets("LX-Input Sort").Range("E1:X" & wbmain.Worksheets("LX-Input Sort").Range("E" & Rows.Count).End(xlUp).Row).Copy
+wbmain.Worksheets("LX-Input").Range("E1").PasteSpecial paste:=xlPasteValues
+
+' extend_lx Macro
+
+Set checkRange = wbmain.Worksheets("LX-Input").Range("E:E")
+For Each myCell In checkRange
+        If IsEmpty(myCell.Value) Or myCell.Value = " " Then
+            index = myCell.Row
+            Exit For
+        End If
+    Next myCell
+
+wbmain.Worksheets("LX-Input").Range("A1:A2").AutoFill Destination:=wbmain.Worksheets("LX-Input").Range("A1:A" & index - 1), Type:=xlFillDefault
+wbmain.Worksheets("LX-Input").Range("B1:B2").AutoFill Destination:=wbmain.Worksheets("LX-Input").Range("B1:B" & index - 1), Type:=xlFillDefault
+wbmain.Worksheets("LX-Input").Range("C1:C2").AutoFill Destination:=wbmain.Worksheets("LX-Input").Range("C1:C" & index - 1), Type:=xlFillDefault
+wbmain.Worksheets("LX-Input").Range("D2:D3").AutoFill Destination:=wbmain.Worksheets("LX-Input").Range("D2:D" & index - 1), Type:=xlFillDefault
+
+wbmain.Worksheets("LX-Input Sort").Range("E1:X" & wbmain.Worksheets("LX-Input Sort").Range("E" & Rows.Count).End(xlUp).Row).ClearContents
+
+wbcon.Windows(1).Visible = True
+wbcon.Save
+wbcon.Close
+Application.ScreenUpdating = True
+MsgBox "Data Imported Successfully", vbInformation
+Set wbcon = Nothing
+ListBox4.AddItem Me.Label7
+Me.Label7 = "no file selected..."
+CommandButton8.Enabled = False
+
+End Sub
+
+
+
+Private Sub generateScripts_Click()
+
+
+  Dim FolderName As String
+    FolderName = GetFolder()
+    If FolderName = "" Then
+            MsgBox "No folder was selected. Program will terminate."
+            Exit Sub
+    End If
+
+    Application.ScreenUpdating = False
+
+
+    Dim wbO As Workbook
+    Dim wsI As Worksheet, wsO As Worksheet
+    Dim bigtemp As String
+    'Dim cArray("A", "B", "G", "P", "L", "M", "C", "H", "K", "T", "W", "E", "N", "S", "D", "X", "U", "F") As String
+    bigtemp = ""
+
+    '~~> Set the relevant sheet from where you want to copy
+    Set wsI = wbmain.Sheets("JXB-0")
+    
+    Dim fRange As Range
+    Dim fCell As Range
+    Dim findex As Integer
+
+    Set fRange = wsI.Range("B:B")
+    For Each fCell In fRange
+        If WorksheetFunction.IsNA(fCell) Then
+            findex = fCell.Row - 1
+            Exit For
+        End If
+    Next fCell
+    
+    '~~> Destination/Output Workbook
+    Set wbO = Workbooks.Add
+    With wbO
+        '~~> Set the relevant sheet to where you want to paste
+        wbO.Sheets("Sheet1").Name = "0"
+        Set wsO = wbO.Sheets("0")
+        '~~>. Save the file
+        .SaveAs Filename:=FolderName & "\" & "0.csv"
+
+        '~~> Copy the range
+        wsI.Range("A1:E" & findex).Copy
+
+        '~~> Paste it in say Cell A1. Change as applicable
+        wsO.Range("A1").PasteSpecial paste:=xlPasteValues
+    End With
+
+    wbO.Save
+    wbO.Close
+
+
+' depth Macro
+
+    Dim fName As String
+    Dim sh As Worksheet, nFileNum As Integer
+    Dim paste As String
+    Dim myFolder As String
+    
+    wbmain.Worksheets("depth").Activate
+        Set sh = wbmain.Worksheets("depth")
+        
+    On Error Resume Next
+    
+    sh.Range("A1:J" & sh.Range("J" & Rows.Count).End(xlUp).Row).AutoFilter Field:=10, Criteria1:=Array( _
+        "A", "B", "G", "P", "L", "M", "C", "H", "K", "T", "W", "E", "N", "S", "D", "X", "U", "F", "Z"), Operator:= _
+        xlFilterValues
+    
+    sh.Range("C1:I" & sh.Range("C" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    'This temporarily adds a sheet named "Test."
+    'wbmain.Sheets.Add.Name = "Test"
+    'Sheets("Test").Select
+    'ActiveSheet.paste
+    ''''''''''''''''''''''
+    'Save selected data as text file in users selected folder.
+    'ActiveWorkbook.SaveAs Filename:="depth.scr", FileFormat:=xlText, CreateBackup:=False
+    'Remove temporary sheet.
+    
+    Dim r As Range, c As Range
+    Dim sTemp As String
+    
+    Open FolderName & "\" & "depth.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+      
+    
+      wbmain.Worksheets("line").Activate
+    Set sh = wbmain.Worksheets("line")
+    Dim FindRow As Range
+    Dim findexText As String
+    Dim orange As Range
+    Dim ocell As Range
+    
+    Set fRange = wbmain.Sheets("LX-RM").Range("A1:A1000")
+    Set orange = sh.Range("B1:B" & sh.Range("A" & Rows.Count).End(xlUp).Row)
+    For Each fCell In fRange
+        If fCell.DisplayFormat.Interior.ColorIndex = 16 Then
+            findexText = fCell.Row
+            For Each ocell In orange
+            If ocell.Value = findexText Then
+                sh.Cells(ocell.Row, 25).Value = "130"
+                Exit For
+            End If
+            Next ocell
+        ElseIf fCell.DisplayFormat.Interior.ColorIndex = 15 Then
+            findexText = fCell.Row
+            For Each ocell In orange
+            If ocell.Value = findexText Then
+                sh.Cells(ocell.Row, 25).Value = "136"
+                Exit For
+            End If
+            Next ocell
+        End If
+    Next fCell
+    
+    
+    sh.Range("D1:Z" & sh.Range("Z" & Rows.Count).End(xlUp).Row).AutoFilter Field:=26, Criteria1:=Array( _
+    "A", "B", "G", "P", "L", "M", "C", "H", "K", "T", "W", "E", "N", "S", "D", "X", "U", "F", "Z"), Operator:= _
+    xlFilterValues
+    
+
+    sh.Range("D1:Y" & sh.Range("D" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    
+    Open FolderName & "\" & "line.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    
+    Set fRange = sh.Range("C1:C" & sh.Range("A" & Rows.Count).End(xlUp).Row)
+    For Each fCell In fRange
+        If fCell.Value = "1" Then
+            sh.Cells(fCell.Row, 25).Value = "bylayer"
+        End If
+    Next fCell
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+    
+    wbmain.Worksheets("line dia").Activate
+            Set sh = wbmain.Worksheets("line dia")
+    
+    sh.Range("A1:J" & sh.Range("J" & Rows.Count).End(xlUp).Row).AutoFilter Field:=10, Criteria1:=Array( _
+        "A", "B", "G", "P", "L", "M", "C", "H", "K", "T", "W", "E", "N", "S", "D", "X", "U", "F", "Z"), Operator:= _
+        xlFilterValues
+    
+    sh.Range("C1:I" & sh.Range("C" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    'This temporarily adds a sheet named "Test."
+    'wbmain.Sheets.Add.Name = "Test"
+    'Sheets("Test").Select
+    'ActiveSheet.paste
+    'Save selected data as text file in users selected folder.
+    'ActiveWorkbook.SaveAs Filename:="line dia.scr", FileFormat:=xlText, CreateBackup:=False
+    'Remove temporary sheet.
+    
+    Open FolderName & "\" & "line dia.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+    wbmain.Worksheets("Leader").Activate
+                Set sh = wbmain.Worksheets("Leader")
+    
+    sh.Range("A1:G" & sh.Range("G" & Rows.Count).End(xlUp).Row).AutoFilter Field:=7, Criteria1:=Array( _
+        "A", "B", "G", "P", "L", "M", "C", "H", "K", "T", "W", "E", "N", "S", "D", "X", "U", "F", "Z"), Operator:=xlFilterValues
+    ActiveWindow.SmallScroll Down:=30
+    
+    sh.Range("C1:F" & sh.Range("C" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    Open FolderName & "\" & "Leader.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    
+    
+    wbmain.Worksheets("mh cover").Activate
+                Set sh = wbmain.Worksheets("mh cover")
+    
+    sh.Range("A1:J" & sh.Range("J" & Rows.Count).End(xlUp).Row).AutoFilter Field:=10, Criteria1:=Array( _
+        "A", "B", "G", "P", "L", "M", "C", "H", "K", "T", "W", "E", "N", "S", "D", "X", "U", "F", "Z"), Operator:= _
+        xlFilterValues
+    
+    sh.Range("C1:I" & sh.Range("C" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    'This temporarily adds a sheet named "Test."
+    'wbmain.Sheets.Add.Name = "Test"
+    'Sheets("Test").Select
+    'ActiveSheet.paste
+    'Save selected data as text file in users selected folder.
+    'ActiveWorkbook.SaveAs Filename:="mh cover.scr", FileFormat:=xlText, CreateBackup:=False
+    'Remove temporary sheet.
+    
+    Open FolderName & "\" & "mh cover.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    
+    
+    wbmain.Worksheets("FlowD").Activate
+                Set sh = wbmain.Worksheets("FlowD")
+    
+    sh.Range("A1:I" & sh.Range("I" & Rows.Count).End(xlUp).Row).AutoFilter Field:=9, Criteria1:=Array("F", "S", "Z"), Operator:=xlFilterValues
+    
+    sh.Range("C1:H" & sh.Range("C" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    'This temporarily adds a sheet named "Test."
+    'wbmain.Sheets.Add.Name = "Test"
+    'Sheets("Test").Select
+    'ActiveSheet.paste
+    'Save selected data as text file in users selected folder.
+    'ActiveWorkbook.SaveAs Filename:="FlowD.scr", FileFormat:=xlText, CreateBackup:=False
+    'Remove temporary sheet.
+    
+    Open FolderName & "\" & "FlowD.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+    
+    wbmain.Worksheets("Chamber").Activate
+                Set sh = wbmain.Worksheets("Chamber")
+    
+    sh.Range("A1:E" & sh.Range("E" & Rows.Count).End(xlUp).Row).AutoFilter Field:=5, Criteria1:=Array( _
+        "A", "B", "G", "P", "L", "M", "C", "H", "K", "T", "W", "E", "N", "S", "D", "X", "U", "F", "Z"), Operator:=xlFilterValues
+    
+    sh.Range("C1:D" & sh.Range("C" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    'This temporarily adds a sheet named "Test."
+    'wbmain.Sheets.Add.Name = "Test"
+    'Sheets("Test").Select
+    'ActiveSheet.paste
+    'Save selected data as text file in users selected folder.
+    'ActiveWorkbook.SaveAs Filename:="Chamber.scr", FileFormat:=xlText, CreateBackup:=False
+    'Remove temporary sheet.
+    
+    Open FolderName & "\" & "Chamber.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+    
+    
+    wbmain.Worksheets("GL").Activate
+    Set sh = wbmain.Worksheets("GL")
+    
+    sh.Range("A1:H" & sh.Range("H" & Rows.Count).End(xlUp).Row).AutoFilter Field:=8, Criteria1:="Z", Operator:=xlFilterValues
+    
+    sh.Range("A1:G" & sh.Range("A" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    
+    
+    Open FolderName & "\" & "GL.scr" For Output As #1
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    Close #1
+    
+    
+    'create points script
+    wbmain.Worksheets("CG").Activate
+    Set sh = wbmain.Worksheets("CG")
+    sh.Range("F1:I" & sh.Range("B" & Rows.Count).End(xlUp).Row).SpecialCells(xlCellTypeVisible).Select
+    Open "points.scr" For Output As #1
+    sTemp = ""
+    sTemp = "Color" & Chr(9) & Chr(9) & Chr(9) & Chr(9) & Chr(9) & Chr(9) & "bylayer" & Chr(10) _
+    & "Layer" & Chr(9) & "set" & Chr(9) & "_DX_DH" & Chr(9) & Chr(9) & Chr(9) & Chr(9)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    For Each r In Selection.Rows
+    sTemp = ""
+    For Each c In r.Cells
+    sTemp = sTemp & c.Text & Chr(9)
+    Next c
+    sTemp = Left(sTemp, Len(sTemp) - 1)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Next r
+    
+    sTemp = ""
+    sTemp = "Layer" & Chr(9) & "set" & Chr(9) & "0" & Chr(9) & Chr(9) & Chr(9) & Chr(9)
+    bigtemp = bigtemp & sTemp & Chr(10)
+    Print #1, sTemp
+    Close #1
+    
+    Open FolderName & "\" & "full_script.scr" For Output As #1
+    Print #1, bigtemp
+    Close #1
+    
+    
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+    'Indicate save action.
+    
+    Application.ScreenUpdating = True
+    
+    MsgBox "Scripts Saved!", vbInformation
+    
+    Application.DisplayAlerts = False
+    Application.DisplayAlerts = True
+
+End Sub
+
+Private Sub Label8_Click()
+
+End Sub
+
+Private Sub UserForm_Activate()
+Set wbmain = ThisWorkbook
+'CommandButton1.Enabled = False
+'CommandButton2.Enabled = False
+CommandButton3.Enabled = False
+'CommandButton4.Enabled = False
+CommandButton5.Enabled = False
+CommandButton7.Enabled = False
+CommandButton8.Enabled = False
+'CommandButton9.Enabled = False
+'CommandButton10.Enabled = False
+
+
+ListBox1.AddItem "Copied Files List:"
+ListBox2.AddItem "Copied Files List:"
+ListBox3.AddItem "Copied Files List:"
+ListBox4.AddItem "Copied Files List:"
+
+End Sub
+
+Private Sub UserForm_Terminate()
+If Not (wb Is Nothing) Then
+wb.Windows(1).Visible = True
+End If
+
+If Not (wbUU Is Nothing) Then
+wbUU.Windows(1).Visible = True
+End If
+
+If Not (wbcon Is Nothing) Then
+wbcon.Windows(1).Visible = True
+End If
+
+
+
+End Sub
+
+
